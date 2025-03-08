@@ -1,0 +1,97 @@
+:root {
+  --bg-color: #0d1117;
+  --text-color: #c9d1d9;
+  --border-color: #30363d;
+  --hover-bg: #161b22;
+  --primary-color: #58a6ff;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: var(--hover-bg);
+  box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+}
+
+h2, h3 {
+  color: var(--primary-color);
+  text-align: center;
+}
+
+.drop-area {
+  border: 2px dashed var(--border-color);
+  border-radius: 10px;
+  padding: 20px;
+  cursor: pointer;
+  text-align: center;
+  background-color: var(--bg-color);
+  transition: 0.3s;
+}
+
+.drop-area:hover {
+  background-color: var(--hover-bg);
+}
+
+.file-name {
+  font-weight: bold;
+  color: #3fb950;
+}
+
+.variable-selection, .model-selection {
+  margin-top: 20px;
+}
+
+label {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+select, input[type="checkbox"] {
+  background-color: var(--hover-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: 8px;
+  border-radius: 5px;
+  width: 100%;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.checkbox-label {
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-label input {
+  margin-right: 5px;
+}
+
+button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-top: 20px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background-color: #1f6feb;
+}

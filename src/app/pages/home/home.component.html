@@ -1,0 +1,39 @@
+<div class="app-container">
+  <div class="card">
+    <h2>📂 Upload CSV</h2>
+    <label for="file-upload" class="drop-area" (dragover)="onDragOver($event)" (drop)="onDrop($event)">
+      <input type="file" id="file-upload" hidden (change)="onFileSelected($event)" accept=".csv" />
+      <p class="m-0" *ngIf="!fileName">Trascina un file qui o clicca per selezionarlo</p>
+      <p *ngIf="fileName" class="file-name m-0">✅ {{ fileName }}</p>
+    </label>
+    <p *ngIf="fileSize" class="file-size">📏 Dimensione: {{ fileSize }} KB</p>
+  </div>
+
+  <div class="card" *ngIf="columns.length > 0">
+    <h3>📊 Seleziona Variabili</h3>
+
+    <div class="field-group">
+      <label>Variabili Indipendenti:</label>
+      <div class="checkbox-group">
+        <label *ngFor="let column of columns" class="checkbox-label">
+          <input type="checkbox" [value]="column" (change)="toggleIndependentVar(column, $event)">
+          {{ column }}
+        </label>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Variabile Dipendente:</label>
+      <select [(ngModel)]="dependentVar">
+        <option *ngFor="let column of columns" [value]="column">{{ column }}</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🤖 Seleziona un Modello</h3>
+    <select [(ngModel)]="selectedModel">
+      <option *ngFor="let model of models" [value]="model">{{ model }}</option>
+    </select>
+  </div>
+</div>
