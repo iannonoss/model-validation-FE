@@ -1,27 +1,31 @@
 import {Component} from '@angular/core';
 import {NgForOf, NgIf} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {SharedService} from '../../services/shared.service';
+import {catchError, Subscription, tap, throwError} from 'rxjs';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   standalone: true,
   imports: [
-    NgIf,
     FormsModule,
-    NgForOf
   ],
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent {
-  fileName: string | null = null;
-  fileSize: string | null = null;
-  columns: string[] = [];
-  independentVars: string[] = [];
-  dependentVar: string | null = null;
-  selectedModel: string | null = null;
+  public fileName: string | null = null;
+  public fileSize: string | null = null;
+  public columns: string[] = [];
+  public independentVars: string[] = [];
+  public dependentVar: string | null = null;
+  public selectedModel: string | null = null;
+  public models = ['Random Forest', 'SVM', 'XGBoost', 'Neural Network'];
+  public loading = false;
+  private subscriptions: Array<Subscription> = [];
 
-  models = ['Random Forest', 'SVM', 'XGBoost', 'Neural Network'];
+  constructor(private sharedService: SharedService) {
+  }
 
   public onFileSelected(event: any) {
     const file = event.target.files[0];
@@ -29,6 +33,7 @@ export class HomeComponent {
       this.fileName = file.name;
       this.fileSize = this.formatFileSize(file.size);
       this.extractColumns(file);
+      this.uploadFile(file);
     }
   }
 
@@ -43,6 +48,7 @@ export class HomeComponent {
       this.fileName = file.name;
       this.fileSize = this.formatFileSize(file.size);
       this.extractColumns(file);
+      this.uploadFile(file);
     }
   }
 
@@ -62,6 +68,22 @@ export class HomeComponent {
     } else {
       this.independentVars = this.independentVars.filter(varName => varName !== column);
     }
+  }
+
+  public uploadFile(file: File) {
+    this.loading = true;
+    const sb = this.sharedService.uploadCSV(file).pipe(
+      tap(res => {
+        console.log(res);
+        this.loading = false;
+      }),
+      catchError(err => {
+        console.log(err);
+        this.loading = false;
+        return throwError(err);
+      })
+    ).subscribe()
+    this.subscriptions.push(sb);
   }
 
   private formatFileSize(size: number): string {

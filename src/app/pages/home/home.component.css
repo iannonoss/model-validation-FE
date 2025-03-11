@@ -63,3 +63,11 @@ button {
 button:hover {
   background-color: #24903e;
 }
+
+.loading {
+  color: #ffa500 !important;
+  font-size: 1rem !important;
+  margin-top: 5px !important;
+  text-align: center !important;
+  font-weight: bold !important;
+}
