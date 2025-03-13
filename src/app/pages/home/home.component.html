@@ -2,7 +2,7 @@
   <div class="card">
     <h2>📂 Upload CSV</h2>
     <label for="file-upload" class="drop-area" (dragover)="onDragOver($event)" (drop)="onDrop($event)">
-      <input type="file" id="file-upload" hidden (change)="onFileSelected($event)" accept=".csv" />
+      <input type="file" id="file-upload" hidden (change)="onFileSelected($event)" accept=".csv"/>
       @if (!fileName) {
         <p class="m-0">Trascina un file qui o clicca per selezionarlo</p>
       }
@@ -13,44 +13,137 @@
     @if (loading) {
       <p class="loading">⏳ Caricamento in corso...</p>
     }
-    @if (fileSize) {
-      <p class="file-size">📏 Dimensione: {{ fileSize }}</p>
-    }
   </div>
-
-  @if (columns.length > 0) {
+  @if (previewData.length > 0) {
     <div class="card">
-      <h3>📊 Seleziona Variabili</h3>
-
-      <div class="field-group">
-        <label>Variabili Indipendenti:</label>
-        <div class="checkbox-group">
-          @for (column of columns; track column) {
-            <label class="checkbox-label">
-              <input type="checkbox" [value]="column" (change)="toggleIndependentVar(column, $event)">
-              {{ column }}
-            </label>
-          }
-        </div>
-      </div>
-
-      <div class="field-group">
-        <label>Variabile Dipendente:</label>
-        <select [(ngModel)]="dependentVar">
-          @for (column of columns; track column) {
-            <option [value]="column">{{ column }}</option>
-          }
-        </select>
+      <h3>📋 Anteprima Dataset</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+          <tr>
+            @for (col of columns; track col) {
+              <th>{{ col }}</th>
+            }
+          </tr>
+          </thead>
+          <tbody>
+            @for (row of previewData; track row) {
+              <tr>
+                @for (col of columns; track col) {
+                  <td>{{ row[col] }}</td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
     </div>
   }
+  <div class="d-flex row justify-content-between">
+    <div class="col-md-7 col-sm-12">
+      @if (columns.length > 0) {
+        <div class="card mb-4">
+          <h3>📌 Tipo di Divisione</h3>
+          <select [(ngModel)]="selectedSplit">
+            <option value="holdout">Holdout (80-20)</option>
+            <option value="stratified">Stratified Split (80-20)</option>
+            <option value="kfold">K-Fold Cross Validation (K=5)</option>
+            <option value="stratified_kfold">Stratified K-Fold (K=5)</option>
+            <option value="loo">Leave-One-Out (LOO)</option>
+          </select>
+        </div>
+        <div class="card mb-4">
+          <h3>🎲 Random State</h3>
+          <input type="number" [(ngModel)]="randomState" placeholder="Inserisci un valore (default: 42)" />
+        </div>
+        <div class="card mb-4">
+          <h3>📊 Seleziona Variabili</h3>
 
-  <div class="card">
-    <h3>🤖 Seleziona un Modello</h3>
-    <select [(ngModel)]="selectedModel">
-      @for (model of models; track model) {
-        <option [value]="model">{{ model }}</option>
+          <div class="field-group">
+            <label>Variabili Indipendenti:</label>
+            <div class="checkbox-group">
+              @for (column of columns; track column) {
+                <label class="checkbox-label">
+                  <input type="checkbox" [value]="column" (change)="toggleIndependentVar(column, $event)">
+                  {{ column }}
+                </label>
+              }
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label>Variabile Dipendente:</label>
+            <select [(ngModel)]="dependentVar">
+              @for (column of columns; track column) {
+                <option [value]="column">{{ column }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="card">
+          <h3>🤖 Seleziona un Modello</h3>
+          <select [(ngModel)]="selectedModel">
+            @for (model of models; track model) {
+              <option [value]="model">{{ model }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-3 float-end">
+          <button mat-flat-button>Processa Dati</button>
+        </div>
       }
-    </select>
+    </div>
+    <div class="col-md-5 col-sm-12">
+      <div class="card">
+        <h3>📊 Informazioni Generali</h3>
+
+        @if (fileName) {
+          <p><strong>📄 Nome file:</strong> {{ fileName }}</p>
+        }
+
+        @if (fileSize) {
+          <p><strong>📏 Dimensione:</strong> {{ fileSize }}</p>
+        }
+
+        @if (columns.length > 0) {
+          <p><strong>🧩 Numero di colonne:</strong> {{ columns.length }}</p>
+        }
+
+        @if (missingValues && Object.keys(missingValues).length > 0) {
+          <p><strong>❌ Valori Mancanti:</strong></p>
+          <ul>
+            @for (key of Object.keys(missingValues); track key) {
+              <li>{{ key }}: {{ missingValues[key] }}</li>
+            }
+          </ul>
+        } @else {
+          <p>✅ Nessun valore mancante nel dataset!</p>
+        }
+
+        @if (categoricalCols.length > 0) {
+          <div class="column-box">
+            <h4>🏷️ Colonne Categoriali</h4>
+            <div class="badge-container">
+              @for (col of categoricalCols; track col) {
+                <span class="badge">{{ col }}</span>
+              }
+            </div>
+          </div>
+        }
+
+        @if (numericalCols.length > 0) {
+          <div class="column-box">
+            <h4>📊 Colonne Numeriche</h4>
+            <div class="badge-container">
+              @for (col of numericalCols; track col) {
+                <span class="badge">{{ col }}</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+
+    </div>
   </div>
 </div>

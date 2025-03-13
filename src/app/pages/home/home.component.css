@@ -71,3 +71,31 @@ button:hover {
   text-align: center !important;
   font-weight: bold !important;
 }
+
+.table-container {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  border: 1px solid var(--border-color);
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: var(--hover-bg);
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+td {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-color);
+}
