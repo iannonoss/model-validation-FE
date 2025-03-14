@@ -1,11 +1,14 @@
 import {Component, inject} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {SharedService} from '../../services/shared.service';
-import {catchError, Subscription, tap, throwError} from 'rxjs';
+import {catchError, Subscription, switchMap, tap, throwError} from 'rxjs';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatSidenavModule} from '@angular/material/sidenav';
 import {MatButtonModule} from '@angular/material/button';
 import {MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition} from '@angular/material/snack-bar';
+import {GeneralInfoComponent} from '../../components/general-info/general-info.component';
+import {GeneralInformation} from '../../models/general-information.model';
+import {PreprocessingDataRequest} from '../../components/general-info/preprocessing-data-request.model';
 
 @Component({
   selector: 'app-home',
@@ -16,26 +19,34 @@ import {MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition}
     MatFormFieldModule,
     MatSidenavModule,
     MatButtonModule,
+    GeneralInfoComponent,
   ],
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent {
-  public fileName: string | null = null;
-  public fileSize: string | null = null;
+
+  public fileName: string | undefined;
+  public fileSize: string | undefined;
   public columns: string[] = [];
   public independentVars: string[] = [];
-  public dependentVar: string | null = null;
-  public selectedModel: string | null = null;
+  public dependentVar: string | undefined;
+  public selectedModel: string | undefined;
   public models = ['Random Forest', 'SVM', 'XGBoost', 'Neural Network'];
   public loading = false;
   public horizontalPosition: MatSnackBarHorizontalPosition = 'end';
   public verticalPosition: MatSnackBarVerticalPosition = 'top';
-  public missingValues: Record<string, number> = {};
-  public categoricalCols: string[] = []; // Colonne categoriali
-  public numericalCols: string[] = [];
-  previewData: any[] = [];
-  public selectedSplit: string = "holdout"; // Default: Holdout
+  public previewData: any[] = [];
+  public selectedSplit: string = "holdout";
   public randomState: number = 42;
+  public hasResults: boolean = false;
+  public results = {
+    accuracy: 0,
+    precision: 0,
+    recall: 0,
+    f1Score: 0
+  };
+  // object
+  public generalInformation: GeneralInformation | undefined;
   private subscriptions: Array<Subscription> = [];
   private _snackBar = inject(MatSnackBar);
 
@@ -43,7 +54,7 @@ export class HomeComponent {
   }
 
   public openSnackBar(message: string): void {
-    this._snackBar.open(message, 'x',{
+    this._snackBar.open(message, 'x', {
       horizontalPosition: this.horizontalPosition,
       verticalPosition: this.verticalPosition,
     })
@@ -92,15 +103,35 @@ export class HomeComponent {
     }
   }
 
+  public processDataAndComputeModelOperation(): void {
+    console.log(this.selectedSplit);
+    const request = PreprocessingDataRequest.buildPreprocessingRequest(this.selectedSplit, this.randomState, this.dependentVar, this.independentVars);
+    this.loading = true;
+    const sb = this.sharedService.preprocessData(request).pipe(
+      /*switchMap(preprocessingData => {
+        return this.sharedService.trainModel(this.selectedModel);
+      }),*/
+      tap(res => {
+        console.log(res);
+        this.loading = false;
+      }),
+      catchError(err => {
+        console.log(err);
+        this.loading = false;
+        this.openSnackBar('Si è verificato un errore durante la comunicazione con il server. Riprova più tardi.')
+        return throwError(err);
+      })
+    ).subscribe()
+    this.subscriptions.push(sb);
+
+  }
+
   public uploadFile(file: File) {
     this.loading = true;
     const sb = this.sharedService.uploadCSV(file).pipe(
       tap(res => {
-        console.log(res);
         this.loading = false;
-        this.missingValues = res?.missing_values;
-        this.categoricalCols = res?.categorical_cols;
-        this.numericalCols = res?.numerical_cols;
+        this.setGeneralInformation(res);
         this.previewData = res?.preview_data;
       }),
       catchError(err => {
@@ -112,6 +143,7 @@ export class HomeComponent {
     ).subscribe()
     this.subscriptions.push(sb);
   }
+
 
   private formatFileSize(size: number): string {
     if (size < 1024) {
@@ -125,5 +157,14 @@ export class HomeComponent {
     }
   }
 
-  protected readonly Object = Object;
+  private setGeneralInformation(res: any) {
+    const newGeneralInformation = new GeneralInformation()
+    newGeneralInformation.fileName = this.fileName;
+    newGeneralInformation.fileSize = this.fileSize;
+    newGeneralInformation.columns = this.columns;
+    newGeneralInformation.missingValues = res?.missing_values;
+    newGeneralInformation.categoricalCols = res?.categorical_cols;
+    newGeneralInformation.numericalCols = res?.numerical_cols;
+    this.generalInformation = newGeneralInformation;
+  }
 }
