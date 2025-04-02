@@ -1,0 +1,299 @@
+/* ===============================
+   ✅ AG Grid Theme Quartz Dark
+   =============================== */
+@use "ag-grid-community/styles" as ag;
+
+@include ag.grid-styles((theme: quartz-dark));
+
+/* ===============================
+   ✅ CSS Variables
+   =============================== */
+:root {
+  --bg-color: #141516 !important;
+  --text-color: #c9d1d9 !important;
+  --border-color: #30363d !important;
+  --hover-bg: #161b22 !important;
+  --primary-color: #58a6ff !important;
+  --card-bg: #161b22 !important;
+  --base-font-size: 14px !important;
+}
+
+/* ===============================
+   ✅ Base Styles
+   =============================== */
+html, body {
+  height: 100% !important;
+  margin: 0 !important;
+  font-family: 'Inter', Roboto, "Helvetica Neue", sans-serif !important;
+  background-color: var(--bg-color) !important;
+  color: var(--text-color) !important;
+  font-size: var(--base-font-size);
+}
+
+body {
+  font-family: 'Inter', Arial, sans-serif !important;
+  font-size: var(--base-font-size);
+}
+
+.app-container, .info-container, .results-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.25rem;
+}
+
+.app-container {
+  width: 60% !important;
+}
+
+.info-container {
+  width: 40% !important;
+}
+
+.results-container {
+  width: 100% !important;
+}
+
+.card {
+  background-color: var(--card-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 10px !important;
+  padding: 20px !important;
+  box-shadow: 0px 2px 5px rgba(255, 255, 255, 0.05) !important;
+  margin: 0.5rem !important;
+}
+
+.card h3 {
+  color: var(--primary-color) !important;
+  font-size: 0.95rem !important;
+  margin-bottom: 10px !important;
+}
+
+.card p {
+  font-size: 0.9rem !important;
+  margin: 5px 0 !important;
+  color: var(--text-color) !important;
+}
+
+.card ul {
+  list-style: none !important;
+  padding: 0 !important;
+}
+
+.card ul li {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  padding: 8px !important;
+  border-radius: 5px !important;
+  margin-top: 5px !important;
+  font-size: 0.8rem !important;
+  color: var(--text-color) !important;
+}
+
+.card ul li::before {
+  content: "⚠️ ";
+}
+
+h2, h3 {
+  color: var(--primary-color) !important;
+  font-size: 1.3rem !important;
+  margin-bottom: 15px !important;
+  font-weight: bold !important;
+}
+
+.drop-area {
+  border: 2px dashed var(--border-color) !important;
+  border-radius: 10px !important;
+  padding: 20px !important;
+  cursor: pointer !important;
+  background-color: var(--hover-bg) !important;
+  text-align: center !important;
+  transition: 0.3s !important;
+  height: 100%;
+  align-items: center;
+  align-content: center;
+}
+
+.drop-area:hover {
+  background-color: var(--bg-color) !important;
+}
+
+.file-name {
+  font-weight: bold !important;
+  color: #3fb950 !important;
+}
+
+.file-size {
+  color: #8b949e !important;
+  font-size: 0.8rem !important;
+  margin-top: 5px !important;
+}
+
+.field-group {
+  margin-top: 15px !important;
+}
+
+label {
+  display: block !important;
+  font-weight: bold !important;
+  margin-bottom: 5px !important;
+  color: white !important;
+}
+
+select, input[type="checkbox"], input[type="number"] {
+  background-color: var(--hover-bg) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+  padding: 8px !important;
+  border-radius: 5px !important;
+  width: 100% !important;
+  font-size: 0.9rem !important;
+}
+
+.checkbox-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin-top: 0.5rem !important;
+}
+
+.checkbox-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 0.5rem !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-radius: 20px !important;
+}
+
+button {
+  display: block !important;
+  width: 100% !important;
+  padding: 12px !important;
+  margin-top: 20px !important;
+  color: white !important;
+  background-color: #1f6feb !important;
+  border: none !important;
+  border-radius: 5px !important;
+  cursor: pointer !important;
+  transition: 0.3s !important;
+  font-size: 0.9rem !important;
+}
+
+button:hover {
+  background-color: #2dba4e !important;
+}
+
+mat-form-field {
+  margin-right: 12px !important;
+}
+
+.mat-mdc-snack-bar-container .mat-mdc-button.mat-mdc-snack-bar-action:not(:disabled).mat-unthemed {
+  color: var(--mat-snack-bar-button-color, var(--mat-sys-inverse-primary)) !important;
+  margin-top: 0 !important;
+  background: rgba(255, 0, 0, 0.3) !important;
+}
+
+.column-box {
+  background-color: var(--hover-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  padding: 15px !important;
+  margin-top: 10px !important;
+}
+
+.column-box h4 {
+  color: #ffa500 !important;
+  font-size: 0.95rem !important;
+  margin-bottom: 10px !important;
+}
+
+.badge-container {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+.badge {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: var(--text-color) !important;
+  font-size: 0.8rem !important;
+  padding: 5px 10px !important;
+  border-radius: 5px !important;
+  display: inline-block !important;
+}
+
+input[type=checkbox] {
+  background-color: var(--hover-bg) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+  padding: 8px !important;
+  border-radius: 5px !important;
+  width: 100% !important;
+  max-inline-size: min-content !important;
+}
+
+input[type=number] {
+  background-color: var(--hover-bg) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+  padding: 8px !important;
+  border-radius: 5px !important;
+}
+
+.container {
+  max-width: 700px !important;
+  margin: 40px auto !important;
+  font-family: Arial, sans-serif !important;
+  color: #333 !important;
+  font-size: 0.9rem !important;
+}
+
+.upload-section {
+  text-align: center !important;
+  margin-bottom: 30px !important;
+}
+
+.variable-selection, .model-selection {
+  margin-top: 20px !important;
+}
+
+.loading {
+  color: #ffa500 !important;
+  font-size: 0.9rem !important;
+  margin-top: 5px !important;
+  text-align: center !important;
+  font-weight: bold !important;
+}
+
+.table-container {
+  overflow-x: auto !important;
+  max-width: 100% !important;
+  margin-top: 10px !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  margin-top: 10px !important;
+  font-size: 0.9rem !important;
+}
+
+th, td {
+  border: 1px solid var(--border-color) !important;
+  padding: 8px !important;
+  text-align: left !important;
+}
+
+th {
+  background-color: var(--hover-bg) !important;
+  color: var(--primary-color) !important;
+  font-weight: bold !important;
+}
+
+td {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: var(--text-color) !important;
+}
+
+.main-container {
+  width: 100% !important;
+}

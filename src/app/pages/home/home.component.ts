@@ -1,4 +1,4 @@
-import {Component, inject} from '@angular/core';
+import {Component, inject, OnDestroy} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {SharedService} from '../../services/shared.service';
 import {catchError, Subscription, switchMap, tap, throwError} from 'rxjs';
@@ -9,6 +9,13 @@ import {MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition}
 import {GeneralInfoComponent} from '../../components/general-info/general-info.component';
 import {GeneralInformation} from '../../models/general-information.model';
 import {PreprocessingDataRequest} from '../../components/general-info/preprocessing-data-request.model';
+import {ResultsComponent} from '../../components/results/results.component';
+import {AgGridAngular} from 'ag-grid-angular';
+import {AllCommunityModule, ColDef, ModuleRegistry} from 'ag-grid-community';
+
+
+ModuleRegistry.registerModules([AllCommunityModule]);
+
 
 @Component({
   selector: 'app-home',
@@ -20,14 +27,17 @@ import {PreprocessingDataRequest} from '../../components/general-info/preprocess
     MatSidenavModule,
     MatButtonModule,
     GeneralInfoComponent,
+    ResultsComponent,
+    AgGridAngular
   ],
   styleUrls: ['./home.component.css']
 })
-export class HomeComponent {
+export class HomeComponent implements OnDestroy {
 
   public fileName: string | undefined;
   public fileSize: string | undefined;
   public columns: string[] = [];
+  public columnDefs: ColDef[] | undefined;
   public independentVars: string[] = [];
   public dependentVar: string | undefined;
   public selectedModel: string | undefined;
@@ -38,14 +48,12 @@ export class HomeComponent {
   public previewData: any[] = [];
   public selectedSplit: string = "holdout";
   public randomState: number = 42;
-  public hasResults: boolean = false;
-  public results = {
-    accuracy: 0,
-    precision: 0,
-    recall: 0,
-    f1Score: 0
+  public results: any;
+  public trainData: any[] | undefined;
+  public testData: any[] | undefined;
+  public defaultColDef: ColDef = {
+    flex: 1,
   };
-  // object
   public generalInformation: GeneralInformation | undefined;
   private subscriptions: Array<Subscription> = [];
   private _snackBar = inject(MatSnackBar);
@@ -91,6 +99,7 @@ export class HomeComponent {
       const text = (e.target?.result as string) || '';
       const lines = text.split('\n');
       this.columns = lines[0].split(',').map(col => col.trim());
+      this.columnDefs = this.columns.map(col => ({ field: col }));
     };
     reader.readAsText(file);
   }
@@ -108,11 +117,12 @@ export class HomeComponent {
     const request = PreprocessingDataRequest.buildPreprocessingRequest(this.selectedSplit, this.randomState, this.dependentVar, this.independentVars);
     this.loading = true;
     const sb = this.sharedService.preprocessData(request).pipe(
-      /*switchMap(preprocessingData => {
-        return this.sharedService.trainModel(this.selectedModel);
-      }),*/
+      switchMap(preprocessingData => {
+        return this.sharedService.transformData();
+      }),
       tap(res => {
-        console.log(res);
+        this.trainData = res.train_preview;
+        this.testData = res?.valid_preview;
         this.loading = false;
       }),
       catchError(err => {
@@ -166,5 +176,9 @@ export class HomeComponent {
     newGeneralInformation.categoricalCols = res?.categorical_cols;
     newGeneralInformation.numericalCols = res?.numerical_cols;
     this.generalInformation = newGeneralInformation;
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(subscription => subscription.unsubscribe());
   }
 }

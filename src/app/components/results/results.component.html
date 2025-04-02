@@ -1,0 +1,57 @@
+@if (testData && testData) {
+  <div class="card">
+    <h3>Anteprima Train </h3>
+    <div>
+      <div class="ag-theme-quartz-dark" style="height: 600px;">
+        <ag-grid-angular
+          [rowData]="trainData"
+          [columnDefs]="columns"
+          [defaultColDef]="defaultColDef"
+          [theme]="'legacy'"
+          style="width: 100%; height: 100%;">
+        </ag-grid-angular>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Anteprima Test </h3>
+    <div>
+      <div class="ag-theme-quartz-dark" style="height: 600px;">
+        <ag-grid-angular
+          [rowData]="testData"
+          [columnDefs]="columns"
+          [defaultColDef]="defaultColDef"
+          [theme]="'legacy'"
+          style="width: 100%; height: 100%;">
+        </ag-grid-angular>
+      </div>
+    </div>
+  </div>
+  <div>
+    <button (click)="predictResult()">
+      Avvia Validazione
+    </button>
+  </div>
+
+  <div class="d-flex">
+    <div class="col-4">
+      <div class="card">
+        <h3>Risultati</h3>
+        <div>
+          <p><strong>🎯 Accuracy:</strong> {{ result?.validation_metrics?.accuracy }}</p>
+          <p><strong>📊 Precision:</strong> {{ result?.validation_metrics?.precision }}</p>
+          <p><strong>📉 Recall:</strong> {{ result?.validation_metrics?.recall }}</p>
+          <p><strong>📈 F1-Score:</strong> {{ result?.validation_metrics?.f1Score }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-8">
+      <div class="card">
+        <img [src]="result?.graph_test" class="w-100" alt="Grafico SVM">
+      </div>
+    </div>
+  </div>
+
+  <!--  <img [src]="result?.graph_train" class="w-100 mb-1" alt="Grafico SVM">-->
+
+}

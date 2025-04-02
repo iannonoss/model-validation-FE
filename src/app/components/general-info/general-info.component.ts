@@ -7,8 +7,8 @@ import {GeneralInformation} from '../../models/general-information.model';
   standalone: true,
   imports: [CommonModule],
   template: `
-      <div class="card">
-        <h3>📊 Informazioni Generali</h3>
+      <div>
+        <h3>Informazioni Generali</h3>
 
         @if (generalInfo?.fileName) {
           <p><strong>📄 Nome file:</strong> {{ generalInfo?.fileName }}</p>
@@ -56,7 +56,11 @@ import {GeneralInformation} from '../../models/general-information.model';
         }
       </div>
   `,
-  styles: ``
+  styles: `
+  .card-max {
+    max-height: 100vh !important;
+    overflow: scroll;
+  }`
 })
 export class GeneralInfoComponent implements  OnChanges {
   @Input() generalInfo: GeneralInformation | undefined;

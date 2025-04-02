@@ -23,7 +23,15 @@ export class SharedService {
     return this.http.post(`${this.baseUrl}/preprocess_data`, requestData);
   }
 
-  public trainModel(model: string | undefined): Observable<any> {
+  public transformData(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/transform_data`, {});
+  }
+
+  /*public trainModel(model: string | undefined): Observable<any> {
     return this.http.post(`${this.baseUrl}/train_model`, { model_type: model });
+  }*/
+
+  public predictResult(modelSelected: string | undefined): Observable<any> {
+    return this.http.get(`${this.baseUrl}/predict?model_selected=${modelSelected}`);
   }
 }
