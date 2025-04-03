@@ -1,7 +1,13 @@
-<div class="d-flex flex-column">
+<div class="d-flex flex-column col-xxl-10 col-xl-10 col-lg-12 col-md-12 align-self-center first-enter">
   <div class="d-flex justify-content-between my-ui">
-    <div class="app-container vh-100 overflow-scroll">
-      <div class="card h-100">
+    <div class="app-container vh-100 overflow-scroll justify-content-center">
+      @if (!columnDefs) {
+        <div class="col-12 m-2">
+          <h1 class="title">Benvenuto nel Validatore</h1>
+          <p class="subtitle">Carica il tuo dataset per iniziare l'analisi automatica</p>
+        </div>
+      }
+      <div class="card h-initial-100">
         <h2>Upload CSV</h2>
         <label for="file-upload" class="drop-area" (dragover)="onDragOver($event)" (drop)="onDrop($event)">
           <input type="file" id="file-upload" hidden (change)="onFileSelected($event)" accept=".csv"/>
@@ -17,6 +23,15 @@
           <p class="loading">⏳ Caricamento in corso...</p>
         }
       </div>
+      @if (!columnDefs) {
+        <ul class="sample-files">
+          <li *ngFor="let file of sampleFiles"
+              draggable="true"
+              (dragstart)="onSampleDragStart($event, file)">
+            📄 {{ file.name }}
+          </li>
+        </ul>
+      }
       @if (previewData.length > 0) {
         <div class="mx-2">
           <div class="ag-theme-quartz-dark" style="height: 600px;">
@@ -41,60 +56,89 @@
       </div>
     } @else {
       <div class="info-container vh-100 overflow-scroll justify-content-center align-items-center">
-        <img src="first_enter_pic.png" class="w-100" alt="enter_pic">
+        <img src="ChatGPT Image 3 apr 2025, 12_11_13.png" class="w-100" alt="enter_pic">
       </div>
     }
   </div>
+  <hr class="my-2 mx-4">
   <div>
-    <div class="col-md-12 col-sm-12 p-0">
-      @if (columns.length > 0) {
-        <div class="card">
-          <h3>Tipo di Divisione</h3>
-          <select [(ngModel)]="selectedSplit">
-            <option value="holdout">Holdout (80-20)</option>
-            <option value="stratified">Stratified Split (80-20)</option>
-            <option value="kfold">K-Fold Cross Validation (K=5)</option>
-            <option value="stratified_kfold">Stratified K-Fold (K=5)</option>
-            <option value="loo">Leave-One-Out (LOO)</option>
-          </select>
-        </div>
-        <div class="card">
-          <h3>📊 Seleziona Variabili</h3>
-          <div class="field-group">
-            <label>Variabile Dipendente:</label>
-            <select [(ngModel)]="dependentVar">
-              @for (column of columns; track column) {
-                <option [value]="column">{{ column }}</option>
-              }
+    <div class="d-flex">
+      <div class="col-md-6 col-sm-12 p-0 in-height">
+        @if (columns.length > 0) {
+          <div class="card justify-content-between">
+            <h3>Tipo di Divisione</h3>
+            <select [(ngModel)]="selectedSplit">
+              <option value="holdout">Holdout (80-20)</option>
+              <option value="stratified">Stratified Split (80-20)</option>
+              <option value="kfold">K-Fold Cross Validation (K=5)</option>
+              <option value="stratified_kfold">Stratified K-Fold (K=5)</option>
+              <option value="loo">Leave-One-Out (LOO)</option>
             </select>
           </div>
-          <div class="field-group">
-            <label>Variabili Indipendenti:</label>
-            <div class="checkbox-group">
-              @for (column of columns; track column) {
-                <label class="checkbox-label">
-                  <input type="checkbox" [value]="column"
-                         (change)="toggleIndependentVar(column, $event)"
-                         [disabled]="column === dependentVar">
-                  {{ column }}
-                </label>
-              }
+          <div class="card justify-content-between">
+            <h3>Seleziona Variabili</h3>
+            <div class="field-group">
+              <label>Variabile Dipendente:</label>
+              <select [(ngModel)]="dependentVar">
+                @for (column of columns; track column) {
+                  <option [value]="column.label">{{ column.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="field-group">
+              <label>Variabili Indipendenti:</label>
+              <div class="checkbox-group">
+                @for (column of columns; track column) {
+                  <label class="checkbox-label">
+                    <input type="checkbox"
+                           [(ngModel)]="column.value"
+                           (change)="toggleIndependentVar(column, $event)"
+                           [disabled]="column.label === dependentVar">
+                    {{ column.label }}
+                  </label>
+                }
+              </div>
             </div>
           </div>
-        </div>
-        <div class="card">
-          <h3>🤖 Seleziona un Modello</h3>
-          <select [(ngModel)]="selectedModel">
-            @for (model of models; track model) {
-              <option [value]="model">{{ model }}</option>
-            }
-          </select>
-          <div class="col-3 align-self-end m-0">
-            <button (click)="processDataAndComputeModelOperation()" mat-flat-button>Processa Dati</button>
+          <div class="card justify-content-between">
+            <h3>Seleziona un Modello</h3>
+            <select [(ngModel)]="selectedModel">
+              @for (model of models; track model) {
+                <option [value]="model">{{ model }}</option>
+              }
+            </select>
+            <div class="col-3 align-self-end m-0">
+              <button (click)="processDataAndComputeModelOperation()" mat-flat-button>Processa Dati</button>
+            </div>
           </div>
-        </div>
 
-      }
+        }
+      </div>
+      <div class="col-md-6 col-sm-12 p-0">
+        @if (geminiSuggestion) {
+          <div class="card suggestion-card box">
+            <div class="d-flex justify-content-between">
+              <h3 class="gradient-text">
+                <img src="stars.png" style="width: 30px">
+                Suggerimenti AI</h3>
+              <span class="badge" style="height: fit-content;">Gemini 1.5 Flash</span>
+            </div>
+            <p><strong>🎯 Target suggerito:</strong> {{ geminiSuggestion?.target }}</p>
+
+            <p><strong>🧩 Variabili indipendenti:</strong></p>
+            <ul>
+              @for (col of geminiSuggestion?.independent_features; track col) {
+                <li>{{ col }}</li>
+              }
+            </ul>
+
+            <p><strong>💡 Motivazione:</strong></p>
+            <p>{{ geminiSuggestion?.motivation }}</p>
+
+            <button (click)="applyGeminiSuggestions()">Applica Suggerimenti</button>
+          </div>
+        }
+      </div>
     </div>
   </div>
   <hr class="my-2 mx-4">
@@ -109,3 +153,15 @@
     </div>
   </div>
 </div>
+
+@if (loading) {
+  <div class="overlay-spinner">
+    <mat-progress-spinner
+      diameter="60"
+      strokeWidth="5"
+      color="accent"
+      mode="indeterminate">
+    </mat-progress-spinner>
+  </div>
+}
+

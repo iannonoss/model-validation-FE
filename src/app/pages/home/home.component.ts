@@ -1,4 +1,4 @@
-import {Component, inject, OnDestroy} from '@angular/core';
+import {ChangeDetectorRef, Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {SharedService} from '../../services/shared.service';
 import {catchError, Subscription, switchMap, tap, throwError} from 'rxjs';
@@ -12,10 +12,15 @@ import {PreprocessingDataRequest} from '../../components/general-info/preprocess
 import {ResultsComponent} from '../../components/results/results.component';
 import {AgGridAngular} from 'ag-grid-angular';
 import {AllCommunityModule, ColDef, ModuleRegistry} from 'ag-grid-community';
-
+import {MatProgressSpinner} from '@angular/material/progress-spinner';
+import {NgForOf} from '@angular/common';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+interface ColValue {
+  value: boolean;
+  label: string;
+}
 
 @Component({
   selector: 'app-home',
@@ -28,7 +33,9 @@ ModuleRegistry.registerModules([AllCommunityModule]);
     MatButtonModule,
     GeneralInfoComponent,
     ResultsComponent,
-    AgGridAngular
+    AgGridAngular,
+    MatProgressSpinner,
+    NgForOf
   ],
   styleUrls: ['./home.component.css']
 })
@@ -36,7 +43,7 @@ export class HomeComponent implements OnDestroy {
 
   public fileName: string | undefined;
   public fileSize: string | undefined;
-  public columns: string[] = [];
+  public columns: Array<ColValue> = [];
   public columnDefs: ColDef[] | undefined;
   public independentVars: string[] = [];
   public dependentVar: string | undefined;
@@ -51,14 +58,18 @@ export class HomeComponent implements OnDestroy {
   public results: any;
   public trainData: any[] | undefined;
   public testData: any[] | undefined;
+  public geminiSuggestion: any = null;
   public defaultColDef: ColDef = {
     flex: 1,
   };
+  sampleFiles = [
+    {name: 'complete_titanic.csv', path: 'public/complete_titanic.csv'},
+  ];
   public generalInformation: GeneralInformation | undefined;
   private subscriptions: Array<Subscription> = [];
   private _snackBar = inject(MatSnackBar);
 
-  constructor(private sharedService: SharedService) {
+  constructor(private sharedService: SharedService, private cdr: ChangeDetectorRef) {
   }
 
   public openSnackBar(message: string): void {
@@ -98,22 +109,25 @@ export class HomeComponent implements OnDestroy {
     reader.onload = (e) => {
       const text = (e.target?.result as string) || '';
       const lines = text.split('\n');
-      this.columns = lines[0].split(',').map(col => col.trim());
-      this.columnDefs = this.columns.map(col => ({ field: col }));
+      this.columns = lines[0].split(',').map(col => ({
+        label: col.trim(),
+        value: false
+      }));
+      this.columnDefs = this.columns.map(col => ({field: col.label}));
     };
     reader.readAsText(file);
   }
 
-  public toggleIndependentVar(column: string, event: any) {
-    if (event.target.checked) {
-      this.independentVars.push(column);
+  public toggleIndependentVar(column: ColValue, event: any) {
+    console.log(event);
+    if (event?.target?.checked) {
+      this.independentVars.push(column.label);
     } else {
-      this.independentVars = this.independentVars.filter(varName => varName !== column);
+      this.independentVars = this.independentVars.filter(varName => varName !== column.label);
     }
   }
 
   public processDataAndComputeModelOperation(): void {
-    console.log(this.selectedSplit);
     const request = PreprocessingDataRequest.buildPreprocessingRequest(this.selectedSplit, this.randomState, this.dependentVar, this.independentVars);
     this.loading = true;
     const sb = this.sharedService.preprocessData(request).pipe(
@@ -123,6 +137,7 @@ export class HomeComponent implements OnDestroy {
       tap(res => {
         this.trainData = res.train_preview;
         this.testData = res?.valid_preview;
+        setTimeout(() => window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'}), 5);
         this.loading = false;
       }),
       catchError(err => {
@@ -139,10 +154,14 @@ export class HomeComponent implements OnDestroy {
   public uploadFile(file: File) {
     this.loading = true;
     const sb = this.sharedService.uploadCSV(file).pipe(
-      tap(res => {
-        this.loading = false;
+      switchMap(res => {
         this.setGeneralInformation(res);
         this.previewData = res?.preview_data;
+        return this.sharedService.suggestFeatures();
+      }),
+      tap(res => {
+        this.geminiSuggestion = res.suggestion;
+        this.loading = false;
       }),
       catchError(err => {
         console.log(err);
@@ -171,7 +190,7 @@ export class HomeComponent implements OnDestroy {
     const newGeneralInformation = new GeneralInformation()
     newGeneralInformation.fileName = this.fileName;
     newGeneralInformation.fileSize = this.fileSize;
-    newGeneralInformation.columns = this.columns;
+    newGeneralInformation.columns = this.columns.map(el => el.label);
     newGeneralInformation.missingValues = res?.missing_values;
     newGeneralInformation.categoricalCols = res?.categorical_cols;
     newGeneralInformation.numericalCols = res?.numerical_cols;
@@ -180,5 +199,38 @@ export class HomeComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(subscription => subscription.unsubscribe());
+  }
+
+  onSampleDragStart(event: DragEvent, file: any) {
+    event.dataTransfer?.setData('text/plain', file.path);
+  }
+
+  onDropFile(event: DragEvent) {
+    event.preventDefault();
+    const path = event.dataTransfer?.getData('text/plain');
+
+    if (path) {
+      fetch(path)
+        .then(res => res.text())
+        .then(csvContent => {
+          this.fileName = path.split('/').pop();
+        });
+    } else {
+      // handle manual file drop
+    }
+  }
+
+  public applyGeminiSuggestions(): void {
+    if (this.geminiSuggestion) {
+      this.dependentVar = this.geminiSuggestion?.target;
+      this.geminiSuggestion.independent_features?.forEach((item: string) => {
+        const column = this.columns?.find(el => el.label === item);
+        if (column) {
+          column.value = true;
+        }
+      });
+      this.independentVars = this.geminiSuggestion.independent_features;
+    }
+    this.cdr.detectChanges();
   }
 }

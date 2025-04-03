@@ -19,6 +19,10 @@ export class SharedService {
     return this.http.post(`${this.baseUrl}/upload_csv`, formData, {headers});
   }
 
+  public suggestFeatures(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/suggest_features`);
+  }
+
   public preprocessData(requestData: PreprocessingDataRequest): Observable<any> {
     return this.http.post(`${this.baseUrl}/preprocess_data`, requestData);
   }
