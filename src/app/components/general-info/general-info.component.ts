@@ -8,7 +8,6 @@ import {GeneralInformation} from '../../models/general-information.model';
   imports: [CommonModule],
   template: `
       <div>
-        <h3>Informazioni Generali</h3>
 
         @if (generalInfo?.fileName) {
           <p><strong>📄 Nome file:</strong> {{ generalInfo?.fileName }}</p>

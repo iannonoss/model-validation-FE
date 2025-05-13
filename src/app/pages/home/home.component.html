@@ -1,6 +1,6 @@
 <div class="d-flex flex-column col-xxl-10 col-xl-10 col-lg-12 col-md-12 align-self-center first-enter">
   <div class="d-flex justify-content-between my-ui">
-    <div class="app-container vh-100 overflow-scroll justify-content-center">
+    <div class="app-container overflow-scroll justify-content-between">
       @if (!columnDefs) {
         <div class="col-12 m-2">
           <h1 class="title">Benvenuto nel Validatore</h1>
@@ -8,106 +8,174 @@
         </div>
       }
       <div class="card h-initial-100">
-        <h2>Upload CSV</h2>
-        <label for="file-upload" class="drop-area" (dragover)="onDragOver($event)" (drop)="onDrop($event)">
-          <input type="file" id="file-upload" hidden (change)="onFileSelected($event)" accept=".csv"/>
-          @if (!fileName) {
-            <img src="upload.svg" style="width: 10%" alt="upload">
-            <p class="m-0">Trascina un file qui o clicca per selezionarlo</p>
+        <div class="card-header d-flex justify-content-between align-items-center mb-3">
+          <h2>Upload CSV</h2>
+        </div>
+        <div class="card-body">
+          <label for="file-upload" class="drop-area" (dragover)="onDragOver($event)" (drop)="onDrop($event)">
+            <input type="file" id="file-upload" hidden (change)="onFileSelected($event)" accept=".csv"/>
+            @if (!fileName) {
+              <img src="upload.svg" style="width: 10%" alt="upload">
+              <p class="m-0">Trascina un file qui o clicca per selezionarlo</p>
+            }
+            @if (fileName) {
+              <p class="file-name m-0">✅ {{ fileName }}</p>
+            }
+          </label>
+          @if (loading) {
+            <p class="loading">⏳ Caricamento in corso...</p>
           }
-          @if (fileName) {
-            <p class="file-name m-0">✅ {{ fileName }}</p>
-          }
-        </label>
-        @if (loading) {
-          <p class="loading">⏳ Caricamento in corso...</p>
+        </div>
+        @if (!columnDefs) {
+          <div class="card-footer">
+            <h3 class="subtitle m-2">Dummy dataset</h3>
+            <ul class="sample-files">
+              <li *ngFor="let file of sampleFiles" [title]="'Carica ' + file.name">
+                <div class="d-flex justify-content-center align-items-center gap-3 btn btn-outline-primary mt-0"
+                     (click)="loadSampleFile(file)">
+                  📄 {{ file.name }}
+                  <div class="mode" [ngClass]="file.mode">
+                    <span class="dot"></span>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        } @else {
+          <div class="card-footer">
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal" (click)="resetData()">Resetta dati</button>
+          </div>
         }
       </div>
-      @if (!columnDefs) {
-        <ul class="sample-files">
-          <li *ngFor="let file of sampleFiles"
-              draggable="true"
-              (dragstart)="onSampleDragStart($event, file)">
-            📄 {{ file.name }}
-          </li>
-        </ul>
-      }
       @if (previewData.length > 0) {
-        <div class="mx-2">
-          <div class="ag-theme-quartz-dark" style="height: 600px;">
-            <ag-grid-angular
-              [rowData]="previewData"
-              [columnDefs]="columnDefs"
-              [defaultColDef]="defaultColDef"
-              [theme]="'legacy'"
-              style="width: 100%; height: 100%;">
-            </ag-grid-angular>
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="mb-3" style="margin-bottom: 0 !important;">Anteprima Dati Caricati</h3>
+            <div class="w-auto mb-3">
+              <button type="button" class="btn btn-sm btn-outline-primary mt-0" data-bs-toggle="modal"
+                      data-bs-target="#previewDataModal" title="Espandi Tabella">
+                <i class="bi bi-arrows-fullscreen"></i> <span class="ms-1 d-none d-sm-inline">Espandi</span></button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="mx-2">
+              <div class="ag-theme-quartz-dark" style="height: 600px;">
+                <ag-grid-angular
+                  [rowData]="previewData"
+                  [columnDefs]="columnDefs"
+                  [defaultColDef]="defaultColDef"
+                  [theme]="'legacy'"
+                  style="width: 100%; height: 100%;">
+                </ag-grid-angular>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="previewDataModal" tabindex="-1" aria-labelledby="previewDataModalLabel"
+             aria-hidden="true">
+          <div class="modal-dialog modal-xl modal-fullscreen-lg-down modal-dialog-scrollable">
+            <div class="modal-content">
+              <div class="modal-header d-flex justify-content-between align-items-center">
+                <h3 class="modal-title" style="margin-bottom: 0 !important;" id="previewDataModalLabel">Anteprima Dati
+                  Caricati (Vista Espansa)</h3>
+                <div class="w-10 justify-content-end d-flex">
+                  <button type="button" class="btn-close btn-close-white w-25 m-0 bg-transparent" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="mx-2">
+                  <div class="ag-theme-quartz-dark" style="height: 600px;">
+                    <ag-grid-angular
+                      [rowData]="previewData"
+                      [columnDefs]="columnDefs"
+                      [defaultColDef]="defaultColDef"
+                      [theme]="'legacy'"
+                      style="width: 100%; height: 100%;">
+                    </ag-grid-angular>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary m-3" data-bs-dismiss="modal">Chiudi</button>
+              </div>
+            </div>
           </div>
         </div>
       }
     </div>
     @if (generalInformation) {
-      <div class="info-container card vh-100 overflow-scroll">
-        <div class="d-flex row justify-content-between">
+      <div class="info-container card overflow-scroll">
+        <div class="card-header d-flex justify-content-between align-items-center mb-3">
+          <h3>Informazioni Generali</h3>
+        </div>
+        <div class="d-flex card-body row justify-content-between">
           <div class="col-md-12 col-sm-12 p-0">
             <app-general-info [generalInfo]="generalInformation"></app-general-info>
           </div>
         </div>
       </div>
     } @else {
-      <div class="info-container vh-100 overflow-scroll justify-content-center align-items-center">
+      <div class="info-container overflow-scroll justify-content-center align-items-center">
         <img src="ChatGPT Image 3 apr 2025, 12_11_13.png" class="w-100" alt="enter_pic">
       </div>
     }
   </div>
-  <hr class="my-2 mx-4">
   <div>
     <div class="d-flex">
       <div class="col-md-6 col-sm-12 p-0 in-height">
         @if (columns.length > 0) {
           <div class="card justify-content-between">
-            <h3>Tipo di Divisione</h3>
-            <select [(ngModel)]="selectedSplit">
-              <option value="holdout">Holdout (80-20)</option>
-              <option value="stratified">Stratified Split (80-20)</option>
-              <option value="kfold">K-Fold Cross Validation (K=5)</option>
-              <option value="stratified_kfold">Stratified K-Fold (K=5)</option>
-              <option value="loo">Leave-One-Out (LOO)</option>
-            </select>
+            <div class="card-header d-flex justify-content-between align-items-center mb-3">
+              <h3>Tipo di Divisione</h3>
+            </div>
+            <div class="card-body">
+              <select [(ngModel)]="selectedSplit">
+                <option [value]="0.2">80% Train / 20% Test</option>
+                <option [value]="0.25">75% Train / 25% Test</option>
+                <option [value]="0.3">70% Train / 30% Test</option>
+                <option [value]="0.1">90% Train / 10% Test</option>
+              </select>
+            </div>
           </div>
           <div class="card justify-content-between">
-            <h3>Seleziona Variabili</h3>
-            <div class="field-group">
+            <div class="card-header d-flex justify-content-between align-items-center mb-3">
+              <h3>Seleziona Variabili</h3>
+            </div>
+            <div class="card-body">
               <label>Variabile Dipendente:</label>
               <select [(ngModel)]="dependentVar">
                 @for (column of columns; track column) {
                   <option [value]="column.label">{{ column.label }}</option>
                 }
               </select>
-            </div>
-            <div class="field-group">
-              <label>Variabili Indipendenti:</label>
-              <div class="checkbox-group">
-                @for (column of columns; track column) {
-                  <label class="checkbox-label">
-                    <input type="checkbox"
-                           [(ngModel)]="column.value"
-                           (change)="toggleIndependentVar(column, $event)"
-                           [disabled]="column.label === dependentVar">
-                    {{ column.label }}
-                  </label>
-                }
+              <div class="field-group">
+                <label>Variabili Indipendenti:</label>
+                <div class="checkbox-group">
+                  @for (column of columns; track column) {
+                    <label class="checkbox-label">
+                      <input type="checkbox"
+                             [(ngModel)]="column.value"
+                             (change)="toggleIndependentVar(column, $event)"
+                             [disabled]="column.label === dependentVar"
+                             style="max-inline-size: min-content; !important;">
+                      {{ column.label }}
+                    </label>
+                  }
+                </div>
               </div>
             </div>
           </div>
           <div class="card justify-content-between">
-            <h3>Seleziona un Modello</h3>
+            <div class="card-header d-flex justify-content-between align-items-center mb-3">
+              <h3>Seleziona un Modello</h3>
+            </div>
             <select [(ngModel)]="selectedModel">
               @for (model of models; track model) {
                 <option [value]="model">{{ model }}</option>
               }
             </select>
-            <div class="col-3 align-self-end m-0">
+            <div class="card-footer">
               <button (click)="processDataAndComputeModelOperation()" mat-flat-button>Processa Dati</button>
             </div>
           </div>
@@ -117,43 +185,45 @@
       <div class="col-md-6 col-sm-12 p-0">
         @if (geminiSuggestion) {
           <div class="card suggestion-card box">
-            <div class="d-flex justify-content-between">
+            <div class="card-header d-flex justify-content-between align-items-center mb-3">
               <h3 class="gradient-text">
                 <img src="stars.png" style="width: 30px">
                 Suggerimenti AI</h3>
               <span class="badge" style="height: fit-content;">Gemini 1.5 Flash</span>
             </div>
-            <p><strong>🎯 Target suggerito:</strong> {{ geminiSuggestion?.target }}</p>
+            <div class="card-body">
+              <p><strong>🎯 Target suggerito:</strong> {{ geminiSuggestion?.target }}</p>
 
-            <p><strong>🧩 Variabili indipendenti:</strong></p>
-            <ul>
-              @for (col of geminiSuggestion?.independent_features; track col) {
-                <li>{{ col }}</li>
-              }
-            </ul>
+              <p><strong>🧩 Variabili indipendenti:</strong></p>
+              <ul>
+                @for (col of geminiSuggestion?.independent_features; track col) {
+                  <li>{{ col }}</li>
+                }
+              </ul>
 
-            <p><strong>💡 Motivazione:</strong></p>
-            <p>{{ geminiSuggestion?.motivation }}</p>
-
-            <button (click)="applyGeminiSuggestions()">Applica Suggerimenti</button>
+              <p><strong>💡 Motivazione:</strong></p>
+              <p>{{ geminiSuggestion?.motivation }}</p>
+            </div>
+            <div class="card-footer">
+              <button (click)="applyGeminiSuggestions()">Applica Suggerimenti</button>
+            </div>
           </div>
         }
       </div>
     </div>
   </div>
-  <hr class="my-2 mx-4">
   <div class="col-12 d-flex">
     <div class="results-container">
       <app-results [columns]="columnDefs"
                    [trainData]="trainData"
                    [testData]="testData"
-                   [modelSelected]="selectedModel">
-
+                   [modelSelected]="selectedModel"
+                   [independentVars]="independentVars"
+                   (loading)="setLoading($event)">
       </app-results>
     </div>
   </div>
 </div>
-
 @if (loading) {
   <div class="overlay-spinner">
     <mat-progress-spinner

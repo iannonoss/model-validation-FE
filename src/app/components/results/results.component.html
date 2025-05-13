@@ -1,57 +1,306 @@
-@if (testData && testData) {
-  <div class="card">
-    <h3>Anteprima Train </h3>
-    <div>
-      <div class="ag-theme-quartz-dark" style="height: 600px;">
-        <ag-grid-angular
-          [rowData]="trainData"
-          [columnDefs]="columns"
-          [defaultColDef]="defaultColDef"
-          [theme]="'legacy'"
-          style="width: 100%; height: 100%;">
-        </ag-grid-angular>
-      </div>
-    </div>
-  </div>
-  <div class="card">
-    <h3>Anteprima Test </h3>
-    <div>
-      <div class="ag-theme-quartz-dark" style="height: 600px;">
-        <ag-grid-angular
-          [rowData]="testData"
-          [columnDefs]="columns"
-          [defaultColDef]="defaultColDef"
-          [theme]="'legacy'"
-          style="width: 100%; height: 100%;">
-        </ag-grid-angular>
-      </div>
-    </div>
-  </div>
-  <div>
-    <button (click)="predictResult()">
-      Avvia Validazione
-    </button>
-  </div>
-
-  <div class="d-flex">
-    <div class="col-4">
-      <div class="card">
-        <h3>Risultati</h3>
-        <div>
-          <p><strong>🎯 Accuracy:</strong> {{ result?.validation_metrics?.accuracy }}</p>
-          <p><strong>📊 Precision:</strong> {{ result?.validation_metrics?.precision }}</p>
-          <p><strong>📉 Recall:</strong> {{ result?.validation_metrics?.recall }}</p>
-          <p><strong>📈 F1-Score:</strong> {{ result?.validation_metrics?.f1Score }}</p>
+@if (trainData && testData) {
+  <div class="d-flex mb-3">
+    <div
+      [ngClass]="{
+      'col-md-6': tableViewMode === 'split',
+      'col-12': tableViewMode === 'train',
+      'd-none': tableViewMode === 'test'
+    }"
+      class="mb-3 mb-md-0" style="transition: width 0.3s ease-in-out;">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center mb-3">
+          <h3>Anteprima Dati di Training</h3>
+          <div class="justify-content-center align-items-center mb-3">
+            @if (tableViewMode === 'train') {
+              <button class="btn btn-sm btn-outline-secondary m-0" (click)="setTableViewMode('split')"
+                      title="Riduci vista">
+                <i class="bi bi-arrows-angle-contract"></i></button>
+            } @else {
+              <button class="btn btn-sm btn-outline-secondary m-0" (click)="setTableViewMode('train')"
+                      title="Espandi vista">
+                <i class="bi bi-arrows-angle-expand"></i></button>
+            }
+          </div>
+        </div>
+        <div class="card-body ag-theme-quartz-dark p-0" style="height: 400px;">
+          <ag-grid-angular
+            class="ag-theme-quartz-dark"
+            [rowData]="trainData"
+            [columnDefs]="columns"
+            [defaultColDef]="defaultColDef"
+            [theme]="'legacy'"
+            style="width: 100%; height: 100%;">
+          </ag-grid-angular>
         </div>
       </div>
     </div>
-    <div class="col-8">
-      <div class="card">
-        <img [src]="result?.graph_test" class="w-100" alt="Grafico SVM">
+
+    <div
+      [ngClass]="{
+      'col-md-6': tableViewMode === 'split',
+      'd-none': tableViewMode === 'train',
+      'col-12': tableViewMode === 'test'
+    }"
+      class="mb-3 mb-md-0" style="transition: width 0.3s ease-in-out;">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center mb-3">
+          <h3>Anteprima Dati di Test</h3>
+          <div class="justify-content-center align-items-center mb-3">
+            @if (tableViewMode === 'test') {
+              <button class="btn btn-sm btn-outline-secondary m-0" (click)="setTableViewMode('split')"
+                      title="Riduci vista">
+                <i class="bi bi-arrows-angle-contract"></i></button>
+            } @else {
+              <button class="btn btn-sm btn-outline-secondary m-0" (click)="setTableViewMode('test')"
+                      title="Espandi vista">
+                <i class="bi bi-arrows-angle-expand"></i></button>
+            }
+          </div>
+        </div>
+        <div class="card-body ag-theme-quartz-dark p-0" style="height: 400px;">
+          <ag-grid-angular
+            class="ag-theme-quartz-dark"
+            [rowData]="testData"
+            [columnDefs]="columns"
+            [defaultColDef]="defaultColDef"
+            [theme]="'legacy'"
+            style="width: 100%; height: 100%;">
+          </ag-grid-angular>
+        </div>
       </div>
     </div>
   </div>
 
-  <!--  <img [src]="result?.graph_train" class="w-100 mb-1" alt="Grafico SVM">-->
+  <div class="card">
+    <div class="card-body">
+      <div class="d-flex flex-wrap justify-content-center align-items-center gap-3">
+        <div class="d-flex align-items-center">
+          <label for="validationSelect" class="form-label mb-0 me-2">Tecnica:</label>
+          <select id="validationSelect" class="form-select w-auto" [(ngModel)]="selectedValidation">
+            @for (validation of validations; track validation) {
+              <option [value]="validation">{{ validation }}</option>
+            }
+            <option value="hold-out">Solo Test Set (Hold-Out)</option>
+          </select>
+        </div>
 
+        @if (selectedValidation === 'k-fold' || selectedValidation === 'stratified-k-fold') {
+          <div class="d-flex align-items-center">
+            <label for="foldsInput" class="form-label mb-0 me-2" style="min-inline-size: fit-content;">N. Fold
+              (K):</label>
+            <input type="number" id="foldsInput" class="form-control" [(ngModel)]="numberOfFolds" min="2"
+                   style="width: 80px;">
+          </div>
+        }
+
+      </div>
+    </div>
+    <div class="card-footer">
+      <button class="btn btn-primary px-4" (click)="runValidationProcess()">
+        Avvia Analisi
+      </button>
+    </div>
+  </div>
+}
+
+@if (!isLoading && (result || crossValidateResult)) {
+  <div class="d-flex">
+    <div class="result-display-container">
+      @if (result?.graph_test) {
+        <div class="card">
+          <div class="card-header">
+            <h3>Visualizzazione Decision Boundary (su Train Set)</h3>
+          </div>
+          <div class="card-body text-center">
+            <img [src]="result?.graph_train" class="img-fluid" alt="Grafico Decision Boundary">
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>Visualizzazione Decision Boundary (su Test Set)</h3>
+          </div>
+          <div class="card-body text-center">
+            <img [src]="result?.graph_test" class="img-fluid" alt="Grafico Decision Boundary">
+          </div>
+        </div>
+      } @else {
+        <div class="card placeholder-glow">
+          <div class="card-header"><span class="placeholder col-7"></span></div>
+          <div class="card-body d-flex justify-content-center align-items-center" style="min-height: 300px;">
+            <span class="placeholder col-10" style="height: 250px;"></span>
+          </div>
+        </div>
+      }
+
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="mb-3" style="margin-bottom: 0 !important;">Inserisci nuova istanza</h3>
+        </div>
+        <div class="card-body">
+          <div class="mx-2">
+            <ag-grid-angular
+              class="ag-theme-quartz-dark"
+              style="width: 100%; height: min-content"
+              [theme]="'legacy'"
+              [rowData]="dynamicRowData"
+              [columnDefs]="dynamicColumnDefs"
+              [defaultColDef]="{ flex: 1, sortable: true, filter: true }"
+              [stopEditingWhenCellsLoseFocus]="true"
+              [singleClickEdit]="true"
+              [domLayout]="'autoHeight'"
+              [editType]="'fullRow'">
+            </ag-grid-angular>
+          </div>
+          <div *ngIf="newPrediction">
+            <h3 class="mb-3">Risultato della predizione</h3>
+
+            <p><strong>Classe predetta:</strong> {{ newPrediction?.prediction }}</p>
+
+            <div class="mb-2">
+              <p class="mb-1"><strong>Probabilità classe 1:</strong></p>
+              <div class="progress" style="height: 20px;">
+                <div
+                  class="progress-bar bg-success"
+                  role="progressbar"
+                  [style.width.%]="probability1* 100"
+                  [attr.aria-valuenow]="probability1 * 100"
+                  aria-valuemin="0"
+                  aria-valuemax="100">
+                  {{ (newPrediction?.probability_class_1 | percent:'1.0-2') }}
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <p class="mb-1"><strong>Probabilità classe 0:</strong></p>
+              <div class="progress" style="height: 20px;">
+                <div
+                  class="progress-bar bg-danger"
+                  role="progressbar"
+                  [style.width.%]="probability0 * 100"
+                  [attr.aria-valuenow]="probability0 * 100"
+                  aria-valuemin="0"
+                  aria-valuemax="100">
+                  {{ (newPrediction?.probability_class_0 | percent:'1.0-2') }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-primary mt-2" (click)="submitInstance()">Nuova predizione</button>
+        </div>
+      </div>
+    </div>
+    <div class="result-info-container">
+
+      @if (result) {
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h3>Risultati sul Test Set (Hold-Out)</h3>
+            <small class="text-white">Modello: {{ result?.model_selected }}</small>
+          </div>
+          <div class="card-body">
+            <p><strong>🎯 Accuracy:</strong> {{ result?.validation_metrics?.accuracy | number:'1.3-5' }}</p>
+            <p><strong>📊 Precision:</strong> {{ result?.validation_metrics?.precision | number:'1.3-5' }}</p>
+            <p><strong>📉 Recall:</strong> {{ result?.validation_metrics?.recall | number:'1.3-5' }}</p>
+            <p><strong>📈 F1-Score:</strong> {{ result?.validation_metrics?.f1_score | number:'1.3-5' }}</p>
+            <p><strong>📈 AUC-ROC:</strong> {{ result?.validation_metrics?.roc_auc | number:'1.3-5' }}</p>
+          </div>
+        </div>
+      } @else if (selectedValidation === 'hold-out') {
+        <div class="card mb-3 placeholder-glow">
+          <div class="card-header d-flex justify-content-between align-items-center"><span
+            class="placeholder col-8"></span></div>
+          <div class="card-body">
+            <span class="placeholder col-10 d-block mb-2"></span>
+            <span class="placeholder col-9 d-block mb-2"></span>
+            <span class="placeholder col-10 d-block mb-2"></span>
+            <span class="placeholder col-8 d-block mb-2"></span>
+            <span class="placeholder col-9 d-block"></span>
+          </div>
+        </div>
+      }
+
+      @if (crossValidateResult) {
+        <div class="card mb-3">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h3>Risultati Cross-Validation</h3>
+            <small class="text-white mb-3">Modello: {{ crossValidateResult?.model_selected }},
+              Tecnica: {{ crossValidateResult?.validation_type }}, Folds: {{ crossValidateResult?.folds }}</small>
+          </div>
+          <div class="card-body">
+            <p><strong>🎯 Accuracy:</strong>
+              {{ crossValidateResult?.average_metrics?.accuracy | number:'1.3-5' }}
+              @if (crossValidateResult?.std_dev_metrics?.accuracy_std !== undefined) {
+                <span class="text-white"
+                      title="Deviazione Standard"> (± {{ crossValidateResult?.std_dev_metrics?.accuracy_std | number:'1.3-5' }}
+                  )</span>
+              }
+            </p>
+            <p><strong>📊 Precision (Macro):</strong>
+              {{ crossValidateResult?.average_metrics?.precision | number:'1.3-5' }}
+              @if (crossValidateResult?.std_dev_metrics?.precision_std !== undefined) {
+                <span class="text-white"
+                      title="Deviazione Standard"> (± {{ crossValidateResult?.std_dev_metrics?.precision_std | number:'1.3-5' }}
+                  )</span>
+              }
+            </p>
+            <p><strong>📉 Recall (Macro):</strong>
+              {{ crossValidateResult?.average_metrics?.recall | number:'1.3-5' }}
+              @if (crossValidateResult?.std_dev_metrics?.recall_std !== undefined) {
+                <span class="text-white"
+                      title="Deviazione Standard"> (± {{ crossValidateResult?.std_dev_metrics?.recall_std | number:'1.3-5' }}
+                  )</span>
+              }
+            </p>
+            <p><strong>📈 F1-Score (Macro):</strong>
+              {{ crossValidateResult?.average_metrics?.f1_score | number:'1.3-5' }}
+              @if (crossValidateResult?.std_dev_metrics?.f1_score_std !== undefined) {
+                <span class="text-white"
+                      title="Deviazione Standard"> (± {{ crossValidateResult?.std_dev_metrics?.f1_score_std | number:'1.3-5' }}
+                  )</span>
+              }
+            </p>
+            <p><strong>📈 AUC-ROC:</strong>
+              {{ crossValidateResult?.average_metrics?.roc_auc | number:'1.3-5' }}
+              @if (crossValidateResult?.std_dev_metrics?.roc_auc_std !== undefined) {
+                <span class="text-white"
+                      title="Deviazione Standard"> (± {{ crossValidateResult?.std_dev_metrics?.roc_auc_std | number:'1.3-5' }}
+                  )</span>
+              }
+            </p>
+            <hr>
+            <p><small><strong>⏱️ Tempo Medio Addestramento
+              (Fit):</strong> {{ crossValidateResult?.average_metrics?.fit_time_mean | number:'1.2-4' }} sec</small></p>
+            <p><small><strong>⏱️ Tempo Medio Valutazione
+              (Score):</strong> {{ crossValidateResult?.average_metrics?.score_time_mean | number:'1.2-4' }} sec</small>
+            </p>
+
+            @if (crossValidateResult?.all_fold_results) {
+              <button class="btn btn-sm btn-outline-secondary mt-2" (click)="toggleRawResults()">
+                {{ showRawResults ? 'Nascondi' : 'Mostra' }} Risultati Grezzi per Fold
+              </button>
+              @if (showRawResults) {
+                <pre class="mt-2 bg-dark text-white p-2 rounded"
+                     style="max-height: 200px; overflow-y: auto;"><code>{{ crossValidateResult.all_fold_results | json }}</code></pre>
+              }
+            }
+          </div>
+        </div>
+      } @else if (selectedValidation !== 'hold-out') {
+        <div class="card mb-3 placeholder-glow">
+          <div class="card-header d-flex justify-content-between align-items-center"><span
+            class="placeholder col-9"></span></div>
+          <div class="card-body">
+            <span class="placeholder col-11 d-block mb-2"></span>
+            <span class="placeholder col-10 d-block mb-2"></span>
+            <span class="placeholder col-9 d-block mb-2"></span>
+            <span class="placeholder col-11 d-block mb-2"></span>
+            <span class="placeholder col-10 d-block"></span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
 }

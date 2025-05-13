@@ -1,0 +1,18 @@
+.mode .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.easy .dot {
+  background-color: green;
+}
+
+.medium .dot {
+  background-color: yellow;
+}
+
+.hard .dot {
+  background-color: red;
+}

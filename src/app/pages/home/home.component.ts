@@ -13,7 +13,8 @@ import {ResultsComponent} from '../../components/results/results.component';
 import {AgGridAngular} from 'ag-grid-angular';
 import {AllCommunityModule, ColDef, ModuleRegistry} from 'ag-grid-community';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
-import {NgForOf} from '@angular/common';
+import {NgClass, NgForOf} from '@angular/common';
+import {HttpClient} from '@angular/common/http';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -35,7 +36,8 @@ interface ColValue {
     ResultsComponent,
     AgGridAngular,
     MatProgressSpinner,
-    NgForOf
+    NgForOf,
+    NgClass
   ],
   styleUrls: ['./home.component.css']
 })
@@ -53,23 +55,25 @@ export class HomeComponent implements OnDestroy {
   public horizontalPosition: MatSnackBarHorizontalPosition = 'end';
   public verticalPosition: MatSnackBarVerticalPosition = 'top';
   public previewData: any[] = [];
-  public selectedSplit: string = "holdout";
+  public selectedSplit: number = 0.2;
   public randomState: number = 42;
-  public results: any;
   public trainData: any[] | undefined;
   public testData: any[] | undefined;
   public geminiSuggestion: any = null;
-  public defaultColDef: ColDef = {
-    flex: 1,
-  };
+  public defaultColDef: ColDef = {flex: 1};
   sampleFiles = [
-    {name: 'complete_titanic.csv', path: 'public/complete_titanic.csv'},
+    {name: 'Purchase Propensity Model', path: 'Social_Network_Ads.csv', mode: 'easy'},
+    {name: 'Titanic Survival Prediction', path: 'complete_titanic.csv', mode: 'medium'},
+    {name: 'Heart Disease Dataset', path: 'heart.csv', mode: 'medium'},
+    {name: 'Wine Quality', path: 'WineQT.csv', mode: 'medium'},
   ];
   public generalInformation: GeneralInformation | undefined;
   private subscriptions: Array<Subscription> = [];
   private _snackBar = inject(MatSnackBar);
 
-  constructor(private sharedService: SharedService, private cdr: ChangeDetectorRef) {
+  constructor(private sharedService: SharedService,
+              private cdr: ChangeDetectorRef,
+              private http: HttpClient) {
   }
 
   public openSnackBar(message: string): void {
@@ -77,6 +81,24 @@ export class HomeComponent implements OnDestroy {
       horizontalPosition: this.horizontalPosition,
       verticalPosition: this.verticalPosition,
     })
+  }
+
+  public loadSampleFile(fileMeta: any) {
+    this.http.get(fileMeta.path, { responseType: 'text' }).subscribe({
+      next: (data) => {
+        const blob = new Blob([data], { type: 'text/csv' });
+        const fakeFile = new File([blob], fileMeta.name, { type: 'text/csv' });
+        const event = {
+          target: {
+            files: [fakeFile]
+          }
+        };
+        this.onFileSelected(event);
+      },
+      error: (err) => {
+        console.error('Errore nel caricamento del file:', err);
+      }
+    });
   }
 
   public onFileSelected(event: any) {
@@ -131,7 +153,7 @@ export class HomeComponent implements OnDestroy {
     const request = PreprocessingDataRequest.buildPreprocessingRequest(this.selectedSplit, this.randomState, this.dependentVar, this.independentVars);
     this.loading = true;
     const sb = this.sharedService.preprocessData(request).pipe(
-      switchMap(preprocessingData => {
+      switchMap(_preprocessingData => {
         return this.sharedService.transformData();
       }),
       tap(res => {
@@ -201,25 +223,6 @@ export class HomeComponent implements OnDestroy {
     this.subscriptions.forEach(subscription => subscription.unsubscribe());
   }
 
-  onSampleDragStart(event: DragEvent, file: any) {
-    event.dataTransfer?.setData('text/plain', file.path);
-  }
-
-  onDropFile(event: DragEvent) {
-    event.preventDefault();
-    const path = event.dataTransfer?.getData('text/plain');
-
-    if (path) {
-      fetch(path)
-        .then(res => res.text())
-        .then(csvContent => {
-          this.fileName = path.split('/').pop();
-        });
-    } else {
-      // handle manual file drop
-    }
-  }
-
   public applyGeminiSuggestions(): void {
     if (this.geminiSuggestion) {
       this.dependentVar = this.geminiSuggestion?.target;
@@ -232,5 +235,40 @@ export class HomeComponent implements OnDestroy {
       this.independentVars = this.geminiSuggestion.independent_features;
     }
     this.cdr.detectChanges();
+  }
+
+  public setLoading(event: boolean) {
+    this.loading = event;
+  }
+
+  public resetData(): void {
+    this.loading = true;
+    const sb = this.sharedService.reset_data().pipe(
+      tap( _ => {
+        this.fileName = undefined;
+        this.fileSize = undefined;
+        this.columns = [];
+        this.columnDefs = undefined;
+        this.independentVars = [];
+        this.dependentVar = undefined;
+        this.selectedModel = undefined;
+        this.previewData = [];
+        this.trainData = undefined;
+        this.testData = undefined;
+        this.geminiSuggestion = null;
+        this.generalInformation = undefined;
+        this.loading = false;
+        this.cdr.detectChanges();
+        this.openSnackBar("Reset completato ✅");
+      }),
+      catchError(err => {
+        console.error("Errore durante il reset:", err);
+        this.loading = false;
+        this.openSnackBar("Errore durante il reset. Riprova.");
+        return throwError(err);
+      })
+    ).subscribe();
+
+    this.subscriptions.push(sb);
   }
 }
