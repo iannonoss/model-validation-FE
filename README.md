@@ -75,7 +75,7 @@ Per domande o feedback, non esitare a contattarmi:
 
 * 📧 **Email:** `https://www.linkedin.com/in/mattia-iannone7/`
 * 👤 **Autore:** Mattia Iannone
-* 🐙 **GitHub:** [iannonoss](https://github.com/iannonoss) (Assumendo che questo sia il tuo profilo)
+* 🐙 **GitHub:** [iannonoss](https://github.com/iannonoss)
 
 ---
 
