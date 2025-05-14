@@ -1,0 +1,7 @@
+.box-prediction {
+  background-color: var(--card-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  padding: 15px !important;
+  margin: 0.59rem;
+}

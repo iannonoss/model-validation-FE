@@ -245,20 +245,7 @@ export class HomeComponent implements OnDestroy {
     this.loading = true;
     const sb = this.sharedService.reset_data().pipe(
       tap( _ => {
-        this.fileName = undefined;
-        this.fileSize = undefined;
-        this.columns = [];
-        this.columnDefs = undefined;
-        this.independentVars = [];
-        this.dependentVar = undefined;
-        this.selectedModel = undefined;
-        this.previewData = [];
-        this.trainData = undefined;
-        this.testData = undefined;
-        this.geminiSuggestion = null;
-        this.generalInformation = undefined;
-        this.loading = false;
-        this.cdr.detectChanges();
+        window.location.reload();
         this.openSnackBar("Reset completato ✅");
       }),
       catchError(err => {
