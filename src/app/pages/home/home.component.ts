@@ -84,10 +84,10 @@ export class HomeComponent implements OnDestroy {
   }
 
   public loadSampleFile(fileMeta: any) {
-    this.http.get(fileMeta.path, { responseType: 'text' }).subscribe({
+    this.http.get(fileMeta.path, {responseType: 'text'}).subscribe({
       next: (data) => {
-        const blob = new Blob([data], { type: 'text/csv' });
-        const fakeFile = new File([blob], fileMeta.name, { type: 'text/csv' });
+        const blob = new Blob([data], {type: 'text/csv'});
+        const fakeFile = new File([blob], fileMeta.name, {type: 'text/csv'});
         const event = {
           target: {
             files: [fakeFile]
@@ -102,7 +102,14 @@ export class HomeComponent implements OnDestroy {
   }
 
   public onFileSelected(event: any) {
-    const file = event.target.files[0];
+    this.selectedFileOn(event.target.files[0]);
+  }
+
+  private selectedFileOn(file: any): void {
+    if (file.type !== 'text/csv') {
+      this.openSnackBar("Solo file .csv consentiti, riprova.");
+      return;
+    }
     if (file) {
       this.fileName = file.name;
       this.fileSize = this.formatFileSize(file.size);
@@ -117,13 +124,7 @@ export class HomeComponent implements OnDestroy {
 
   public onDrop(event: DragEvent) {
     event.preventDefault();
-    const file = event.dataTransfer?.files[0];
-    if (file) {
-      this.fileName = file.name;
-      this.fileSize = this.formatFileSize(file.size);
-      this.extractColumns(file);
-      this.uploadFile(file);
-    }
+    this.selectedFileOn(event.dataTransfer?.files[0]);
   }
 
   public extractColumns(file: File) {
@@ -150,7 +151,10 @@ export class HomeComponent implements OnDestroy {
   }
 
   public processDataAndComputeModelOperation(): void {
-    const request = PreprocessingDataRequest.buildPreprocessingRequest(this.selectedSplit, this.randomState, this.dependentVar, this.independentVars);
+    if (!this.dependentVar || !this.independentVars || !this.selectedModel) {
+      this.openSnackBar("Prima di procedere assicurati di aver compilato tutti i campi.");
+      return
+    }    const request = PreprocessingDataRequest.buildPreprocessingRequest(this.selectedSplit, this.randomState, this.dependentVar, this.independentVars);
     this.loading = true;
     const sb = this.sharedService.preprocessData(request).pipe(
       switchMap(_preprocessingData => {
@@ -244,7 +248,7 @@ export class HomeComponent implements OnDestroy {
   public resetData(): void {
     this.loading = true;
     const sb = this.sharedService.reset_data().pipe(
-      tap( _ => {
+      tap(_ => {
         window.location.reload();
         this.openSnackBar("Reset completato ✅");
       }),
@@ -255,7 +259,6 @@ export class HomeComponent implements OnDestroy {
         return throwError(err);
       })
     ).subscribe();
-
     this.subscriptions.push(sb);
   }
 }
